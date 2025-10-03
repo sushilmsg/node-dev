@@ -8,7 +8,7 @@ res.end('Hello world');
 }).listen(8080, ()=>{
   console.log("Connection successfully");
 });
-*/
+
 
 const fs = require('fs');
 
@@ -22,3 +22,4 @@ fs.readFile('./src/myfile.txt','utf8',(err , data)=>{
 });
 
 console.log("Readinng file.. ( this run first)");
+*/

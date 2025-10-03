@@ -4,16 +4,35 @@ const app = express();
 
 const port= 3000;
 
-app.get('/user/:userId/:name/:password',(req,res)=>{ 
-console.log(req.params);
+const { AdminAuth,UserAuth } =  require("./middleware/auth");
+
+app.use('/admin/', AdminAuth);
 
 
- res.send({'name':'sushil kumar','age':'30 years'});
-
+app.get('/admin/user',(req, res)=>{
+   res.send("User send data");
 });
 
-app.post('/user',async (req, res)=>{
-  
+app.get('/user', UserAuth, (req ,res)=>{
+   res.send("User login successfully");
+});
+
+app.get('/admin/getAllData',(req,res)=>{
+
+   res.send("All data send successfully");
+})
+
+
+
+
+app.get('/user/:userId/:name/:password',(req,res)=>{ 
+console.log(req.params);
+ res.send({'name':'sushil kumar','age':'30 years'});
+});
+
+
+
+app.post('/user',async (req, res)=>{  
   console.log(req.body);
   res.send("Data successfully save to database");
 })
