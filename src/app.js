@@ -4,7 +4,10 @@ const app = express();
 
 const port= 3000;
 
-app.get('/user',(req,res)=>{ 
+app.get('/user/:userId/:name/:password',(req,res)=>{ 
+console.log(req.params);
+
+
  res.send({'name':'sushil kumar','age':'30 years'});
 
 });
