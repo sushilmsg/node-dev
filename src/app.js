@@ -4,14 +4,21 @@ const app = express();
 
 const port= 3000;
 
-app.use('/user',(req, res,next)=>{ 
- // res.send("Welcome to user route");
-  next();
-}, (req ,res)=>{   
+app.get('/user',(req,res)=>{ 
+ res.send({'name':'sushil kumar','age':'30 years'});
 
-   res.send("Welcome to another route");
 });
 
+app.post('/user',async (req, res)=>{
+  
+  console.log(req.body);
+  res.send("Data successfully save to database");
+})
+
+app.delete('/user',(req, res)=>{
+
+  res.send('Deleted successfully');
+});
 
 
 app.listen(port, ()=>{
