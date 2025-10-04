@@ -1,50 +1,44 @@
 const express = require("express");
 
+const connectdb = require('./config/db');
 const app = express();
-
 const port= 3000;
 
-const { AdminAuth,UserAuth } =  require("./middleware/auth");
+const users =  require('./models/users');
 
-app.use('/admin/', AdminAuth);
-
-
-app.get('/admin/user',(req, res)=>{
-   res.send("User send data");
-});
-
-app.get('/user', UserAuth, (req ,res)=>{
-   res.send("User login successfully");
-});
-
-app.get('/admin/getAllData',(req,res)=>{
-
-   res.send("All data send successfully");
-})
-
-
-
-
-app.get('/user/:userId/:name/:password',(req,res)=>{ 
-console.log(req.params);
- res.send({'name':'sushil kumar','age':'30 years'});
-});
-
-
-
-app.post('/user',async (req, res)=>{  
-  console.log(req.body);
-  res.send("Data successfully save to database");
-})
-
-app.delete('/user',(req, res)=>{
-
-  res.send('Deleted successfully');
-});
-
-
-app.listen(port, ()=>{
+connectdb().then( ()=>{
+  console.log("Database connection successfully");
+  app.listen(port, ()=>{
      console.log(`Server port listing on ${port}`);
 });
+
+app.post('/signup', async(req, res)=>{
+   
+     const userObj = new users({
+       firstName : "utkarsh",
+       lastName  : "gupta",
+       emailId   : "gupta.utkarsh@gmail.com",
+       password :  "utkarsh@12345"
+
+     });
+
+     try {
+         await userObj.save();
+        res.send("User added successfully");
+     }
+     catch(err){
+      res.status(400).send("Error saving the user"+err.message);
+     }
+ 
+});
+
+})
+.catch( (err)=>{
+ console.log("Database cannot connected");
+})
+
+
+
+
 
 

@@ -1,11 +1,11 @@
-let MongoClient = require('mongodb').MongoClient;
-//Create a database named "mydb":
-let url = "mongodb://localhost:27017/mydb";
+// getting-started.js
+const mongoose = require('mongoose');
 
-MongoClient.connect(url, function(err, db) {
-  if (err) throw err;
-  console.log("Database created!");
-  db.close();
-});
+const connectdb = async () =>{
+  await mongoose.connect('mongodb://127.0.0.1:27017/node_dev');
 
-              
+  // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
+}
+
+module.exports = connectdb;
+
