@@ -1,70 +1,108 @@
 const express = require("express");
 
-const connectdb = require('./config/db');
+const connectdb = require("./config/db");
 const app = express();
-const port= 3000;
+const port = 3000;
 
-const users =  require('./models/users');
+const users = require("./models/users");
+const { validateSignupData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
-connectdb().then( ()=>{
-  console.log("Database connection successfully");
-  app.listen(port, ()=>{
-     console.log(`Server port listing on ${port}`);
-});
-
-})
-.catch( (err)=>{
- console.log("Database cannot connected");
-})
-
+connectdb()
+  .then(() => {
+    console.log("Database connection successfully");
+    app.listen(port, () => {
+      console.log(`Server port listing on ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.log("Database cannot connected");
+  });
 
 //User signup api
 
-app.post('/signup', async(req, res)=>{
-   
-     const userObj = new users(req.body);
-     try {
-         await userObj.save();
-        res.send("User added successfully");
-     }
-     catch(err){
-      res.status(400).send("Error saving the user"+err.message);
-     }
- 
+app.post("/signup", async (req, res) => {
+  validateSignupData(req);
+
+  const { firstName, lastName, emailId, password } = req.body;
+
+  const passwordhash = bcrypt.hashSync(password, 10);
+
+  const userObj = new users({
+    firstName,
+    lastName,
+    emailId,
+    password: passwordhash,
+  });
+  try {
+    await userObj.save();
+    res.send("User added successfully");
+  } catch (err) {
+    res.status(400).send("Error saving the user" + err.message);
+  }
+});
+
+//SingIn api
+
+app.post("/signIn", async(req, res) => {
+
+  try{
+
+    const { emailId, password } = req.body;
+    const UserEmail = await users.findOne({ emailId: emailId });
+    if (!UserEmail) {
+      throw new Error("Invalid credentials");
+    }
+
+    console.log('users='+UserEmail.password);
+    const isPasswordValid = await bcrypt.compare(password, UserEmail.password);
+
+    console.log(isPasswordValid);
+    if (isPasswordValid) {
+      res.send("Login Successfully");
+    } else {
+      throw new Error("Error: " + err.message);
+    }
+
+  } catch(err){
+
+    res.status(400).send("Error: "+err.message);
+  }
+
+
+
 });
 
 //find all user list
-app.get('/fetchAll', async(req, res)=>{
-  try{
-    const allusers =  await users.find({});
-  //  console.log(allusers);
+app.get("/fetchAll", async (req, res) => {
+  try {
+    const allusers = await users.find({});
+    //  console.log(allusers);
     res.send(allusers);
-  }catch(err){
+  } catch (err) {
     res.status(400).send("something went wrong");
   }
-
-})
+});
 
 // find user list by id api
-app.get('/fetchById', async(req, res)=>{
-   try{
-    const fetchByIds =await users.findById(req.body);
-     if(fetchByIds){
-       res.send(fetchByIds);
-     }else{
+app.get("/fetchById", async (req, res) => {
+  try {
+    const fetchByIds = await users.findById(req.body);
+    if (fetchByIds) {
+      res.send(fetchByIds);
+    } else {
       res.send("User not found");
-     }
-
-   }catch(err){      
-      res.send("Something went wrong"+err.message);
-   }
+    }
+  } catch (err) {
+    res.send("Something went wrong" + err.message);
+  }
 });
 
 //find user to update api
 
-app.put('/userUpdate/:id', async (req, res) => {
+app.put("/userUpdate/:id", async (req, res) => {
   try {
     const userId = req.params.id;
     const updateData = req.body;
@@ -79,28 +117,26 @@ app.put('/userUpdate/:id', async (req, res) => {
       res.status(200).json({
         success: true,
         message: "User updated successfully",
-        data: updatedUser
+        data: updatedUser,
       });
     } else {
       res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
-
-
   } catch (err) {
     console.error(err);
     res.status(500).json({
       success: false,
       message: "Something went wrong",
-      error: err.message
+      error: err.message,
     });
   }
 });
 
 //delete user api
-app.delete('/deleteUser/:id', async (req, res) => {
+app.delete("/deleteUser/:id", async (req, res) => {
   try {
     const userId = req.params.id;
 
@@ -110,26 +146,20 @@ app.delete('/deleteUser/:id', async (req, res) => {
     if (result.deletedCount > 0) {
       res.status(200).json({
         success: true,
-        message: "User deleted successfully"
+        message: "User deleted successfully",
       });
     } else {
       res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
-
   } catch (err) {
     console.error(err);
     res.status(500).json({
       success: false,
       message: "Something went wrong",
-      error: err.message
+      error: err.message,
     });
   }
 });
-
-
-
-
-
