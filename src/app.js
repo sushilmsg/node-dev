@@ -5,10 +5,16 @@ const app = express();
 const port = 3000;
 
 const users = require("./models/users");
+const { UserAuth } = require("./middleware/auth");
 const { validateSignupData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require('cookie-parser')
+const jwt =  require("jsonwebtoken");
+
+
 
 app.use(express.json());
+app.use(cookieParser());
 
 connectdb()
   .then(() => {
@@ -47,26 +53,37 @@ app.post("/signup", async (req, res) => {
 //SingIn api
 
 app.post("/signIn", async(req, res) => {
-
+      
   try{
-
     const { emailId, password } = req.body;
-    const UserEmail = await users.findOne({ emailId: emailId });
-    if (!UserEmail) {
+    const User = await users.findOne({ emailId });
+    if (!User) {
       throw new Error("Invalid credentials");
     }
 
-    console.log('users='+UserEmail.password);
-    const isPasswordValid = await bcrypt.compare(password, UserEmail.password);
+ // const isPasswordValid = await bcrypt.compare(password, User.password);
+   const isPasswordValid = await User.validatePasword(password);  
 
-    console.log(isPasswordValid);
-    if (isPasswordValid) {
+   
+
+    if (isPasswordValid) {    
+  //const token = await jwt.sign({_id: User._id}, "Dev@Nodejs@#!123", { expiresIn:'1d' });
+
+   const token = await User.getJWT();
+
+   console.log(token);
+
+     //add cookies
+     res.cookie("token",token);
+
       res.send("Login Successfully");
     } else {
       throw new Error("Error: " + err.message);
     }
 
   } catch(err){
+
+   
 
     res.status(400).send("Error: "+err.message);
   }
@@ -75,8 +92,44 @@ app.post("/signIn", async(req, res) => {
 
 });
 
+//user profile
+app.get("/profile", UserAuth, async(req, res)=>{
+
+     try{
+      const user = req.user;
+      console.log(user);
+      res.send(user);
+
+     }catch(err){
+      
+      res.status(400).send("Something went wrong");
+     }
+
+    
+});
+
+
+//connection request api
+
+app.post("/connectionrequest", UserAuth, async(req, res)=>{
+
+try{
+
+  const user =  req.user;
+
+  res.send(user.firstName + " connected request successfully");
+ 
+}catch(err){
+
+  res.status(400).send("Error"+err.message)
+}
+
+})
+
+
+
 //find all user list
-app.get("/fetchAll", async (req, res) => {
+app.get("/fetchAll", UserAuth, async (req, res) => {
   try {
     const allusers = await users.find({});
     //  console.log(allusers);
